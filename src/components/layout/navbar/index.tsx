@@ -1,4 +1,4 @@
-import { getMenu } from "@/lib/shopify";
+﻿import { getMenu } from "@/lib/shopify";
 import { Menu } from "@/lib/shopify/types";
 import Link from "next/link";
 import MobileMenu from "./mobile-menu";
@@ -7,7 +7,8 @@ import LogoSquare from "@/components/logo-square";
 import CartModal from "@/components/cart/modal";
 
 export async function Navbar() {
-  const menu = await getMenu("next-js-frontend-menu");
+    const menu = await getMenu("next-js-frontend-menu");
+    console.log("Menu items:", menu);
   return (
     <nav className="flex items-center justify-between p-4 lg:px-6 sticky top-0 backdrop-blur-sm z-[999]">
       <div className="block flex-none md:hidden">

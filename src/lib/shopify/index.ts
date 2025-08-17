@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import {
   HIDDEN_PRODUCT_TAG,
   SHOPIFY_GRAPHQL_API_ENDPOINT,
@@ -17,7 +17,7 @@ import {
   getCollectionProductsQuery,
   getCollectionsQuery,
 } from "./queries/collection";
-import { getMenuQuery } from "./queries/menu";
+import { getMenuByHandleQuery } from "./queries/menu";
 import {
   getProductQuery,
   getProductRecommendationsQuery,
@@ -166,26 +166,45 @@ function reshapeProducts(products: ShopifyProduct[]) {
 
   return reshapedProducts;
 }
+
 export async function getMenu(handle: string): Promise<Menu[]> {
-  const res = await shopifyFetch<ShopifyMenuOperation>({
-    query: getMenuQuery,
-    tags: [TAGS.collections],
-    variables: {
-      handle,
-    },
-  });
+    const res = await shopifyFetch<ShopifyMenuOperation>({
+        query: getMenuByHandleQuery,
+        tags: [TAGS.collections],
+        variables: {
+            handle,
+        },
+    });
+    console.log("Menu response:", res); 
+    return res.body?.data?.menu?.items?.map((item: { title: string; url: string }) => {
+        let cleanUrl = item.url;
 
-  return (
-    res.body?.data?.menu?.items.map((item: { title: string; url: string }) => ({
-      title: item.title,
-      path: item.url
-        .replace(domain, "")
-        .replace("/collections", "/search")
-        .replace("/pages", ""),
-    })) || []
-  );
+        // Remove domain if present
+        if (domain && cleanUrl.includes(domain)) {
+            cleanUrl = cleanUrl.replace(domain, "");
+        }
+
+        // Ensure URL starts with /
+        if (!cleanUrl.startsWith('/')) {
+            cleanUrl = '/' + cleanUrl;
+        }
+
+        // Transform collections to search (only once)
+        if (cleanUrl.startsWith('/collections/')) {
+            cleanUrl = cleanUrl.replace('/collections/', '/search/');
+        }
+
+        // Remove /pages prefix
+        if (cleanUrl.startsWith('/pages/')) {
+            cleanUrl = cleanUrl.replace('/pages/', '/');
+        }
+
+        return {
+            title: item.title,
+            path: cleanUrl,
+        };
+    }) || [];
 }
-
 export async function getProducts({
   query,
   reverse,
